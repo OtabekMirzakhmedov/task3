@@ -90,82 +90,80 @@ class GameRule {
     }
   }
   
-class Game {
-  constructor(moves) {
-    this.moves = moves;
-    this.gameRule = new GameRule(this.moves);
-    this.hmac = new HMAC();
-    this.key = this.hmac.generateKey();
-    this.computerMove = this.generateComputerMove();
-  }
-
-  generateComputerMove() {
-    const randomIndex = Math.floor(Math.random() * this.moves.length);
-    return this.moves[randomIndex];
-  }
-
-  play(userMove) {
-    const result = this.gameRule.determineWinner(userMove, this.computerMove);
-    console.log(`Your move: ${userMove}`);
-    console.log(`Computer move: ${this.computerMove}`);
-    console.log(result);
-    console.log(`HMAC key: ${this.key}`);
-    const hmac = this.hmac.generateHMAC(this.key, this.computerMove);
-    console.log(`HMAC: ${hmac}`);
-  }
-}
-
-class Menu {
-  constructor(moves) {
-    this.moves = moves;
-  }
-
-  printMenu() {
-    console.log('Available moves:');
-    this.moves.forEach((move, index) => {
-      console.log(`${index + 1} - ${move}`);
-    });
-    console.log('0 - exit');
-    console.log('? - help');
-  }
-}
-
-function main() {
-  const args = process.argv.slice(2);
-
-  if (args.length < 3 || args.length % 2 === 0 || new Set(args).size !== args.length) {
-    console.log('Invalid arguments. Please provide an odd number of unique moves.');
-    console.log('Example: node rockPaperScissors.js rock paper scissors');
-    return;
-  }
-
-  const help = new Help(args);
-  const game = new Game(args);
-  const menu = new Menu(args);
-
-  menu.printMenu();
-
-  const readline = require('readline');
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
-  rl.question('Enter your move: ', (answer) => {
-    const moveIndex = parseInt(answer, 10);
-
-    if (moveIndex === 0) {
-      console.log('Exiting the game...');
-    } else if (answer === '?') {
-      help.printHelpTable();
-    } else if (moveIndex >= 1 && moveIndex <= args.length) {
-      game.play(args[moveIndex - 1]);
-    } else {
-      console.log('Invalid move. Please enter a valid move number.');
+  class Game {
+    constructor(moves) {
+      this.moves = moves;
+      this.gameRule = new GameRule(this.moves);
+      this.hmac = new HMAC();
+      this.key = this.hmac.generateKey();
+      this.computerMove = this.generateComputerMove();
+      this.help = new Help(moves);
+    }
+  
+    generateComputerMove() {
+      const randomIndex = Math.floor(Math.random() * this.moves.length);
+      return this.moves[randomIndex];
+    }
+  
+    printMenu() {
+      console.log('Available moves:');
+      this.moves.forEach((move, index) => {
+        console.log(`${index + 1} - ${move}`);
+      });
+      console.log('0 - exit');
+      console.log('? - help');
+      
     }
 
-    rl.close();
-  });
-}
-
-main();
+  
+    play(userMove) {
+      const result = this.gameRule.determineWinner(userMove, this.computerMove);
+      console.log(`Your move: ${userMove}`);
+      console.log(`Computer move: ${this.computerMove}`);
+      console.log(result);
+      console.log(`HMAC key: ${this.key}`);
+    }
+  
+    run() {
+        const hmac = this.hmac.generateHMAC(this.key, this.computerMove);
+        console.log(`HMAC: ${hmac}`);      
+        this.printMenu();
+  
+      const readline = require('readline');
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
+  
+      rl.question('Enter your move: ', (answer) => {
+        const moveIndex = parseInt(answer, 10);
+  
+        if (moveIndex === 0) {
+          console.log('Exiting the game...');
+        } else if (answer === '?') {
+          this.help.printHelpTable();
+        } else if (moveIndex >= 1 && moveIndex <= this.moves.length) {
+          this.play(this.moves[moveIndex - 1]);
+        } else {
+          console.log('Invalid move. Please enter a valid move number.');
+        }
+  
+        rl.close();
+      });
+    }
+  }
+  
+  function main() {
+    const args = process.argv.slice(2);
+  
+    if (args.length < 3 || args.length % 2 === 0 || new Set(args).size !== args.length) {
+      console.log('Invalid arguments. Please provide an odd number of unique moves.');
+      console.log('Example: node rockPaperScissors.js rock paper scissors');
+      return;
+    }
+  
+    const game = new Game(args);
+    game.run();
+  }
+  
+  main();
